@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
-  
   "scripts": {
     "start": "node dist/index.js",
     "dev": "tsx --no-warnings index.ts",
@@ -12,27 +11,34 @@
     "db:seed": "tsx seed.ts",
     "build": "esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --packages=external"
   },
-
   "dependencies": {
-    "express": "^4.21.2",
-    "better-sqlite3": "^12.1.1",
     "bcrypt": "^6.0.0",
-    "cors": "^2.8.5",
-    "ws": "^8.18.0",
-    "drizzle-orm": "^0.44.2",
-    "drizzle-zod": "^0.7.0",
-    "sqlite3": "^5.1.6",
-    "passport": "^0.7.0",
-    "passport-local": "^1.0.0",
+    "better-sqlite3": "^12.1.1",
     "connect-pg-simple": "^10.0.0",
     "connect-sqlite3": "^0.9.16",
+    "cors": "^2.8.5",
+    "drizzle-orm": "^0.44.2",
+    "drizzle-zod": "^0.7.0",
+    "express": "^4.21.2",
     "memorystore": "^1.6.7",
     "nanoid": "^5.1.5",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "sqlite3": "^5.1.6",
+    "ws": "^8.18.0",
     "zod": "^3.24.2",
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
-    "typescript": "5.6.3",
-    "tsx": "^4.19.1"
+    "@types/bcrypt": "^6.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/connect-sqlite3": "^0.9.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^24.10.1",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3"
   }
 }

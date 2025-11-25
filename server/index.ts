@@ -2,18 +2,25 @@ import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import cors from "cors";
 import SQLiteStore from "connect-sqlite3";
-import { join } from "path";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+import { registerRoutes } from "./routes.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 import { WebSocketServer } from 'ws';
 import http from 'http';
+import { storage } from './storage.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
 
-// Configuration CORS
+// MODIFIÉ POUR RAILWAY: Configuration CORS
 app.use(cors({
-  origin: true, // Autoriser toutes les origines en développement
+  origin: process.env.NODE_ENV === 'production' 
+    ? [/\.railway\.app$/, /\.up\.railway\.app$/]
+    : true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -23,11 +30,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configuration du stockage des sessions
+// MODIFIÉ POUR RAILWAY: Configuration du stockage des sessions
 const SQLiteStoreSession = SQLiteStore(session);
 const sessionParser = session({
   store: new SQLiteStoreSession({
-    db: 'data/sessions.db',
+    db: process.env.RAILWAY_VOLUME_MOUNT_PATH 
+      ? `${process.env.RAILWAY_VOLUME_MOUNT_PATH}/sessions.db`
+      : 'data/sessions.db',
     table: 'sessions'
   }),
   secret: process.env.SESSION_SECRET || 'your-secret-key',
@@ -35,6 +44,8 @@ const sessionParser = session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 heures
   }
 });
@@ -96,7 +107,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  const server2 = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -106,24 +117,33 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Setup vite en développement et servir les fichiers statiques en production
   if (app.get("env") === "development") {
-    await setupVite(app, server);
+    await setupVite(app, server2);
   } else {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "localhost",
-  }, () => {
-    log(`serving on port ${port}`);
+  // MODIFIÉ POUR RAILWAY: Servir les fichiers statiques Vue en production
+  if (process.env.NODE_ENV === 'production') {
+    const clientDistPath = path.join(__dirname, '..', '..', 'client-vue', 'dist');
+    
+    log(`[Static] Serving from: ${clientDistPath}`);
+    app.use(express.static(clientDistPath));
+    
+    // Route catch-all pour Vue Router (mode history)
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+  }
+
+  // MODIFIÉ POUR RAILWAY: Port et host
+  const PORT = parseInt(process.env.PORT || '5000', 10);
+  
+  server2.listen(PORT, '0.0.0.0', () => {
+    log(`serving on port ${PORT}`);
+    log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    log(`Data directory: ${process.env.RAILWAY_VOLUME_MOUNT_PATH || 'data/'}`);
   });
 })();
 

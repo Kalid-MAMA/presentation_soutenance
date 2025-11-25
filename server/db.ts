@@ -1,19 +1,40 @@
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import { join } from 'path';
-import * as schema from "@shared/schema";
+import { mkdirSync, existsSync } from 'fs';
+import * as schema from '../shared/schema.js';
 
-// Créer le dossier data s'il n'existe pas
-import { mkdirSync } from 'fs';
+// MODIFIÉ POUR RAILWAY: Utiliser le volume persistant
+const dataDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || join(process.cwd(), 'data');
 
-const dataDir = join(process.cwd(), 'data');
-try {
-  mkdirSync(dataDir, { recursive: true });
-} catch (error) {
-  // Le dossier existe déjà
+console.log(`[DB] 🗂️  Data directory: ${dataDir}`);
+console.log(`[DB] 🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+// Créer le dossier s'il n'existe pas
+if (!existsSync(dataDir)) {
+  try {
+    mkdirSync(dataDir, { recursive: true });
+    console.log(`[DB] ✅ Created data directory`);
+  } catch (error) {
+    console.error('[DB] ❌ Error creating data directory:', error);
+    throw error; // Important : arrêter si on ne peut pas créer le dossier
+  }
+} else {
+  console.log(`[DB] ✅ Data directory exists`);
 }
 
-const sqlite = new Database(join(dataDir, 'kalid.db'));
+const dbPath = join(dataDir, 'kalid.db');
+console.log(`[DB] 💾 Database path: ${dbPath}`);
+
+const sqlite = new Database(dbPath);
 sqlite.pragma('foreign_keys = ON');
+
+// AJOUTÉ: Meilleure performance en production avec WAL mode
+if (process.env.NODE_ENV === 'production') {
+  sqlite.pragma('journal_mode = WAL');
+  console.log(`[DB] ⚡ WAL mode enabled for better performance`);
+}
+
+console.log(`[DB] ✅ Database connection established`);
 
 export const db = drizzle(sqlite, { schema });
