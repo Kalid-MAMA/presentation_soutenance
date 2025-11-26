@@ -9,7 +9,7 @@
     "build:server": "cd server && npm run build",
     "copy:client": "mkdir -p server/dist/public && cp -r client-vue/dist/* server/dist/public/",
     "build": "npm run install:all && npm run build:client && npm run build:server && npm run copy:client",
-    "start": "NODE_ENV=production node server/dist/index.js",
+    "start": "cd server && npm run db:init && npm run db:seed && cd .. && NODE_ENV=production node server/dist/index.js",
     "db:init": "cd server && npm run db:init"
   },
   "engines": {
