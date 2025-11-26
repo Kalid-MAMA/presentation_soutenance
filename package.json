@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "install:all": "npm install && cd client-vue && npm install && cd ../server && npm install",
+    "install:all": "cd client-vue && npm install && cd ../server && npm install",
     "build:client": "cd client-vue && npm run build",
     "build:server": "cd server && npm run build",
     "build": "npm run install:all && npm run build:client && npm run build:server",
