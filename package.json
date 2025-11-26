@@ -4,10 +4,11 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "install:all": "npm install && cd client-vue && npm install && cd ../server && npm install",
+    "install:all": "cd client-vue && npm install && cd ../server && npm install",
     "build:client": "cd client-vue && npm run build",
     "build:server": "cd server && npm run build",
-    "build": "npm run install:all && npm run build:client && npm run build:server",
+    "copy:client": "mkdir -p server/dist/public && cp -r client-vue/dist/* server/dist/public/",
+    "build": "npm run install:all && npm run build:client && npm run build:server && npm run copy:client",
     "start": "NODE_ENV=production node server/dist/index.js",
     "db:init": "cd server && npm run db:init"
   },

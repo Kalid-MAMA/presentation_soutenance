@@ -128,8 +128,8 @@ app.use((req, res, next) => {
 
  // MODIFIÉ POUR RENDER: Servir les fichiers statiques Vue en production (monorepo)
 if (process.env.NODE_ENV === 'production') {
-  // Depuis server/dist/index.js, remonter à la racine : ../../.. puis aller vers client-vue/dist
-  const clientDistPath = path.join(__dirname, '..', '..', '..', 'client-vue', 'dist');
+  // Le frontend est copié dans server/dist/public pendant le build
+  const clientDistPath = path.join(__dirname, 'public');
   
   log(`[Static] Serving from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
