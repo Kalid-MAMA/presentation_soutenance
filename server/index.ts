@@ -16,10 +16,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 
-// MODIFIÉ POUR RAILWAY: Configuration CORS
+// MODIFIÉ POUR RENDER: Configuration CORS (monorepo = même domaine)
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? [/\.railway\.app$/, /\.up\.railway\.app$/]
+    ? [/\.onrender\.com$/]
     : true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -30,25 +30,27 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// MODIFIÉ POUR RAILWAY: Configuration du stockage des sessions
+// MODIFIÉ POUR RENDER: Configuration du stockage des sessions
 const SQLiteStoreSession = SQLiteStore(session);
+const sessionDbPath = process.env.RENDER_DISK_PATH 
+  ? path.join(process.env.RENDER_DISK_PATH, 'sessions.db')
+  : 'data/sessions.db';
+
 const sessionParser = session({
   store: new SQLiteStoreSession({
-    db: process.env.RAILWAY_VOLUME_MOUNT_PATH 
-      ? `${process.env.RAILWAY_VOLUME_MOUNT_PATH}/sessions.db`
-      : 'data/sessions.db',
+    db: sessionDbPath,
     table: 'sessions'
   }),
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     maxAge: 24 * 60 * 60 * 1000, // 24 heures
   }
-});
+}); 
 
 app.use(sessionParser);
 
@@ -124,9 +126,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // MODIFIÉ POUR RAILWAY: Servir les fichiers statiques Vue en production
+  // MODIFIÉ POUR RENDER: Servir les fichiers statiques Vue en production (monorepo)
   if (process.env.NODE_ENV === 'production') {
-    const clientDistPath = path.join(__dirname, '..', '..', 'client-vue', 'dist');
+    const clientDistPath = path.join(__dirname, '..', 'client-vue', 'dist');
     
     log(`[Static] Serving from: ${clientDistPath}`);
     app.use(express.static(clientDistPath));
@@ -137,13 +139,13 @@ app.use((req, res, next) => {
     });
   }
 
-  // MODIFIÉ POUR RAILWAY: Port et host
-  const PORT = parseInt(process.env.PORT || '5000', 10);
+  // MODIFIÉ POUR RENDER: Port et host
+  const PORT = parseInt(process.env.PORT || '10000', 10);
   
   server2.listen(PORT, '0.0.0.0', () => {
-    log(`serving on port ${PORT}`);
-    log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    log(`Data directory: ${process.env.RAILWAY_VOLUME_MOUNT_PATH || 'data/'}`);
+    log(`🚀 Server running on port ${PORT}`);
+    log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    log(`💾 Data directory: ${process.env.RENDER_DISK_PATH || 'data/'}`);
   });
 })();
 
@@ -167,4 +169,4 @@ export const notifyAdmins = async (type: string, data: any) => {
   } catch (error) {
     console.error('Error sending WebSocket notification:', error);
   }
-}
+};

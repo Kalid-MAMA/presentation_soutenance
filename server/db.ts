@@ -4,8 +4,8 @@ import { join } from 'path';
 import { mkdirSync, existsSync } from 'fs';
 import * as schema from '../shared/schema.js';
 
-// MODIFIÉ POUR RAILWAY: Utiliser le volume persistant
-const dataDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || join(process.cwd(), 'data');
+// MODIFIÉ POUR RENDER: Utiliser le volume persistant
+const dataDir = process.env.RENDER_DISK_PATH || join(process.cwd(), 'data');
 
 console.log(`[DB] 🗂️  Data directory: ${dataDir}`);
 console.log(`[DB] 🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -17,7 +17,7 @@ if (!existsSync(dataDir)) {
     console.log(`[DB] ✅ Created data directory`);
   } catch (error) {
     console.error('[DB] ❌ Error creating data directory:', error);
-    throw error; // Important : arrêter si on ne peut pas créer le dossier
+    throw error;
   }
 } else {
   console.log(`[DB] ✅ Data directory exists`);
@@ -29,7 +29,7 @@ console.log(`[DB] 💾 Database path: ${dbPath}`);
 const sqlite = new Database(dbPath);
 sqlite.pragma('foreign_keys = ON');
 
-// AJOUTÉ: Meilleure performance en production avec WAL mode
+// Meilleure performance en production avec WAL mode
 if (process.env.NODE_ENV === 'production') {
   sqlite.pragma('journal_mode = WAL');
   console.log(`[DB] ⚡ WAL mode enabled for better performance`);

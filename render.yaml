@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: kalid-app
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+    disk:
+      name: kalid-data
+      mountPath: /opt/render/project/data
+      sizeGB: 1

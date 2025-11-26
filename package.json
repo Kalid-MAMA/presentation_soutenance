@@ -10,5 +10,8 @@
     "build": "npm run install:all && npm run build:client && npm run build:server",
     "start": "NODE_ENV=production node server/dist/index.js",
     "db:init": "cd server && npm run db:init"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
