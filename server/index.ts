@@ -126,18 +126,19 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // MODIFIÉ POUR RENDER: Servir les fichiers statiques Vue en production (monorepo)
-  if (process.env.NODE_ENV === 'production') {
-    const clientDistPath = path.join(__dirname, '..', 'client-vue', 'dist');
-    
-    log(`[Static] Serving from: ${clientDistPath}`);
-    app.use(express.static(clientDistPath));
-    
-    // Route catch-all pour Vue Router (mode history)
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(clientDistPath, 'index.html'));
-    });
-  }
+ // MODIFIÉ POUR RENDER: Servir les fichiers statiques Vue en production (monorepo)
+if (process.env.NODE_ENV === 'production') {
+  // Depuis server/dist/index.js, remonter à la racine : ../../.. puis aller vers client-vue/dist
+  const clientDistPath = path.join(__dirname, '..', '..', '..', 'client-vue', 'dist');
+  
+  log(`[Static] Serving from: ${clientDistPath}`);
+  app.use(express.static(clientDistPath));
+  
+  // Route catch-all pour Vue Router (mode history)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
   // MODIFIÉ POUR RENDER: Port et host
   const PORT = parseInt(process.env.PORT || '10000', 10);
